@@ -43,15 +43,17 @@ def preprocess(data: pd.DataFrame):
 with timer("split train and test dataset!!!"):
     # 读取训练集和测试集
     X_train = pd.read_csv('./dataset/atec_anti_fraud_train.csv', encoding='utf-8',
-                          low_memory=False, parse_dates=['date'])
+                          low_memory=False, parse_dates=['date'],index_col='id')
     X_test = pd.read_csv('./dataset/atec_anti_fraud_test_a.csv', encoding='utf-8',
-                         low_memory=False, parse_dates=['date'])
+                         low_memory=False, parse_dates=['date'],index_col='id')
 
     col_train_num, col_test_num = X_train.columns, X_test.columns
 
     X_train, X_test = X_train[col_train_num], X_test[col_test_num]
 
-    X_train = X_train.drop(columns=['label'])
+    X_train = X_train.drop(columns=['label','date'])
+
+    X_test=X_test.drop(columns=['date'])
 
     print(X_train.shape, X_test.shape)
     print("Start filter features!!!")
