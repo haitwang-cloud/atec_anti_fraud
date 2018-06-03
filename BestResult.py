@@ -40,7 +40,6 @@ import numpy as np
 import time
 from time import strftime
 from contextlib import contextmanager
-from mayi import mayi_score
 
 
 @contextmanager
@@ -204,13 +203,13 @@ def sample_extraction2(X, y, frac, pos_index=1):
 
 
 def evaluate(y_true, y_pred, y_prob):
-    """ 估计结果: precision, recall, f1, auc, mayi_score
+    """ 估计结果: precision, recall, f1, auc, score
     """
     p = precision_score(y_true, y_pred)
     r = recall_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred)
     auc = roc_auc_score(y_true, y_prob)
-    mayi = mayi_score(y_true, y_prob)
+    mayi = score(y_true, y_prob)
 
     return [p, r, f1, auc, mayi]
 

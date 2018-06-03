@@ -28,6 +28,8 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 from xgboost import XGBClassifier
 
+from imblearn.over_sampling import SMOTE
+
 import gc
 from operator import itemgetter
 from tqdm import tqdm
@@ -37,7 +39,6 @@ import numpy as np
 import time
 from time import strftime
 from contextlib import contextmanager
-from mayi import mayi_score
 
 @contextmanager
 def timer(name):
@@ -211,7 +212,7 @@ def sample_extraction2(X, y, frac, pos_index=1):
         # 随机选取一些正/负样本点
         num_pos = len(X[X['date']==date])
         num_neg = len(X[X['date']==date])
-        
+
         index_neg = np.random.randint(num_neg, size=int(num_pos*frac))
         index_neg = np.random.randint(num_neg, size=int(num_pos*frac))
         
@@ -233,7 +234,7 @@ def evaluate(y_true, y_pred, y_prob):
     r = recall_score(y_true, y_pred)
     f1  = f1_score(y_true, y_pred)
     auc = roc_auc_score(y_true, y_prob)
-    mayi = mayi_score(y_true, y_prob)
+    mayi = score(y_true, y_prob)
     
     return [p,r,f1,auc,mayi] 
     
@@ -281,7 +282,12 @@ if __name__ == '__main__':
     with timer('Features Extraction'):
         # 分成训练特征集合和测试特征集合
         X_train = merge.loc[merge['label'].notnull(), all_vars]
-        y_train = train['label']  # 训练集的标签
+        label = train['label']  # 训练集的标签
+        y_train=label.replace(-1,1)# 标签为-1的样本设置成标签为1的样本
+
+        ##SMOTE采样算法
+        # X_train,y_train=SMOTE(kind='svm',n_jobs=8).fit_sample(X_train,y_train)
+
         X_train_date = merge.loc[merge['label'].notnull(), 'date']  # 单独提取训练集中日期列, 后面会用到
         # 测试集
         X_test = merge.loc[merge['label'].isnull(), all_vars].values
@@ -292,12 +298,12 @@ if __name__ == '__main__':
     with timer('Model train'):
         # 使用多个分类模型进行决策
         models = [
-                RandomForestClassifier(n_estimators=5, max_depth=10, n_jobs=-1),
-                ExtraTreesClassifier(n_estimators=5, max_depth=10, n_jobs=-1),
+                RandomForestClassifier(n_estimators=100, max_depth=8, n_jobs=-1),
+                ExtraTreesClassifier(n_estimators=100, max_depth=8, n_jobs=-1),
                 #AdaBoostClassifier(DecisionTreeClassifier(max_depth=5), algorithm="SAMME", n_estimators=10),
-                LGBMClassifier(n_estimators=5, max_depth=10),
-                GradientBoostingClassifier(n_estimators=5, max_depth=10),
-                XGBClassifier(n_estimators=5, max_depth=8, n_jobs=-1)
+                LGBMClassifier(n_estimators=100, max_depth=8),
+                GradientBoostingClassifier(n_estimators=100, max_depth=8),
+                XGBClassifier(n_estimators=100, max_depth=8, n_jobs=-1)
                 ]
         
         # 定义评价测度
@@ -344,5 +350,5 @@ if __name__ == '__main__':
         result = pd.DataFrame()
         result['id']    = id_test
         result['score'] = y_test_prob_final
-        result.to_csv('./dataset/submission_180520.csv', index=False)
+        result.to_csv('./dataset/submission_180603.csv', index=False)
 

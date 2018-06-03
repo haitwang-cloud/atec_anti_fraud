@@ -70,6 +70,7 @@ with timer("split train and test dataset!!!"):
     X_train_col.insert(0,'label')
     X_train_col.insert(1,'date')
     X_test_col.insert(0,'date')
+
     print(X_train.shape, X_test.shape)
     print("Start writing")
     X_train.to_csv("./dataset/x_train.csv", encoding='utf-8',header=X_train_col)
