@@ -150,54 +150,6 @@ class KSampleSubset:
             
         return np.vstack(X)[:,:-2], np.squeeze(np.vstack(y)) 
 
-
-    def fit_transform(self, frac):
-        """
-        frac: 负样本数量与正样本数量之比
-        """
-        X, y = [], []
-        for name, group in self.X.groupby('by'):
-            """ 在每个分组中抽取一些正/负样本 """
-            # 本组下的正负样本
-            samples_pos = group[group['y'] == 1] # 此分组下的正样本
-            samples_neg = group[group['y'] == 0] # 此分组下的负样本
-
-            # 正/负样本的数量
-            num_pos, num_neg = len(samples_pos), len(samples_neg)
-
-            # 抽取一部分的正/负样本组成训练集
-            index_pos = np.random.randint(num_pos, size=int(num_pos))      # 抽取num_pos个正样本
-            index_neg = np.random.randint(num_neg, size=int(num_pos*frac)) # 抽取num_pos*frac个负样本
-
-            # 抽取得到的正/负样本
-            samples_pos_selected = samples_pos.iloc[index_pos]
-            samples_neg_selected = samples_neg.iloc[index_neg]
-
-            # 保存抽取到的本组内的正/负样本
-            X.append(samples_pos_selected)
-            y.append(np.ones((int(num_pos), 1)))
-
-            X.append(samples_neg_selected)
-            y.append(np.zeros((int(num_pos*frac), 1)))
-
-        return np.vstack(X)[:,:-2], np.squeeze(np.vstack(y))
-
-
-    def sample_norm(self, X: pd.DataFrame, n_type='MinMax') -> pd.DataFrame:
-        """ 对样本进行标准化处理(为了方便聚类算法)
-        """
-        if n_type == 'MinMax':
-            scaler = MinMaxScaler()
-            X = scaler.fit_transform(X)
-            
-        elif n_type == 'Standard':
-            scaler = StandardScaler()
-            X = scaler.fit_transform(X)
-        else:
-            return X
-        
-        return X
-    
     
 def sample_extraction2(X, y, frac, pos_index=1):
     """ 抽取正样本+负样本
@@ -265,7 +217,7 @@ if __name__ == '__main__':
     with timer('Load data'):
         # 加载原始训练集
         train = pd.read_csv('./dataset/x_train.csv',encoding='utf-8',low_memory=False,parse_dates=['date'])
-        train = train[train['label'] != -1]  # 去除未标记的训练样本
+        # train = train[train['label'] != -1]  # 去除未标记的训练样本
         # 加载原始测试集
         test = pd.read_csv('./dataset/x_test.csv',encoding='utf-8',low_memory=False,parse_dates=['date'])
         # 将训练集和测试集进行暂时合并       
@@ -298,12 +250,12 @@ if __name__ == '__main__':
     with timer('Model train'):
         # 使用多个分类模型进行决策
         models = [
-                RandomForestClassifier(n_estimators=100, max_depth=8, n_jobs=-1),
-                ExtraTreesClassifier(n_estimators=100, max_depth=8, n_jobs=-1),
+                RandomForestClassifier(n_estimators=100, max_depth=15, n_jobs=-1),
+                ExtraTreesClassifier(n_estimators=100, max_depth=15, n_jobs=-1),
                 #AdaBoostClassifier(DecisionTreeClassifier(max_depth=5), algorithm="SAMME", n_estimators=10),
-                LGBMClassifier(n_estimators=100, max_depth=8),
-                GradientBoostingClassifier(n_estimators=100, max_depth=8),
-                XGBClassifier(n_estimators=100, max_depth=8, n_jobs=-1)
+                LGBMClassifier(n_estimators=100, max_depth=15,n_jobs=-1),
+                GradientBoostingClassifier(n_estimators=100, max_depth=15),
+                XGBClassifier(n_estimators=100, max_depth=15, n_jobs=-1)
                 ]
         
         # 定义评价测度
@@ -350,5 +302,5 @@ if __name__ == '__main__':
         result = pd.DataFrame()
         result['id']    = id_test
         result['score'] = y_test_prob_final
-        result.to_csv('./dataset/submission_180603.csv', index=False)
+        result.to_csv('./dataset/submission_180604.csv', index=False)
 
