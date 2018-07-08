@@ -6,6 +6,7 @@ import gc
 from tqdm import tqdm
 import time
 from contextlib import contextmanager
+from sklearn.preprocessing import StandardScaler
 
 
 @contextmanager
@@ -33,13 +34,14 @@ def preprocess(data: pd.DataFrame):
     columns = data.columns
     for col_name in tqdm(columns):
         data[col_name] = data[col_name].fillna(data[col_name].mean())
+    #标准化    
     return data
 
 with timer("split train and test dataset!!!"):
     # 读取训练集和测试集
     X_train = pd.read_csv('./dataset/atec_anti_fraud_train.csv', encoding='utf-8',
                           low_memory=False, parse_dates=['date'],index_col='id')
-    X_test = pd.read_csv('./dataset/atec_anti_fraud_test_a.csv', encoding='utf-8',
+    X_test = pd.read_csv('./dataset/atec_anti_fraud_test_b.csv', encoding='utf-8',
                          low_memory=False, parse_dates=['date'],index_col='id')
     col_train_num, col_test_num = X_train.columns, X_test.columns
     X_train, X_test = X_train[col_train_num], X_test[col_test_num]
@@ -51,18 +53,19 @@ with timer("split train and test dataset!!!"):
     col_train, col_test = [], []
     for item in X_train.columns:
         tmp = np.sum(X_train[item].isnull()) / len(X_train)
-        if tmp < 0.6:
+        if tmp < 1:
             col_train.append(item)
     for item in X_test.columns:
         tmp = np.sum(X_test[item].isnull()) / len(X_test)
-        if tmp < 0.6:
+        if tmp <1:
             col_test.append(item)
     # 选择训练集和测试集的交集
     col = [item for item in col_train if item in col_test]
     print('len(col):', len(col))
     X_train, X_test = X_train[col], X_test[col]
     X_train, X_test = preprocess(X_train), preprocess(X_test)
-
+    X_train, X_test = pd.DataFrame(X_train),pd.DataFrame(X_test)
+    
     X_train=pd.concat([X_train_label,X_train_date,X_train],axis=1)
     X_test=pd.concat([X_test_date,X_test],axis=1)
 
@@ -74,7 +77,7 @@ with timer("split train and test dataset!!!"):
     print(X_train.shape, X_test.shape)
     print("Start writing")
     X_train.to_csv("./dataset/x_train.csv", encoding='utf-8',header=X_train_col)
-    X_test.to_csv("./dataset/x_test.csv", encoding='utf-8',header=X_test_col)
+    X_test.to_csv("./dataset/x_test_b.csv", encoding='utf-8',header=X_test_col)
     del X_train,X_test
     gc.collect()
 
