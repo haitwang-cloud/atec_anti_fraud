@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 10 14:25:19 2018
-
-@author: zbj
-@url: https://dc.cloud.alipay.com/index#/topic/data?id=4
 
 - id: 主键, 不会有重复;
 - label: 1: 12122; 0: 977884; -1: 4725; 正负样本比例: 1.24%
